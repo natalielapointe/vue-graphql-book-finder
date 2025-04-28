@@ -1,30 +1,37 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
   <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+    <h1>🌍 Country Browser</h1>
+
+    <div v-if="loading">Loading...</div>
+    <div v-else-if="error">Error: {{ error.message }}</div>
+
+    <div v-else>
+      <label for="filter-search">filter by country name</label>
+      <input type="search" id="filter-search" v-model="searchText"></input>
+      <div v-if="!filteredCountries.length">No results</div>
+      <ul v-else>
+        <li v-for="country in filteredCountries" :key="country.code">
+          {{ country.name }} {{ country.emoji }} - ({{ country.continent.name }})
+        </li>
+      </ul>
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue" />
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
+<script setup>
+import { ref, computed } from 'vue';
+import { useQuery } from '@vue/apollo-composable';
+import { GET_COUNTRIES } from './graphql/queries';
+
+const searchText = ref('')
+
+const { result, loading, error } = useQuery(GET_COUNTRIES);
+
+const filteredCountries = computed(() => {
+  const countries = result.value?.countries || []
+  if (!searchText.value) return countries
+  return countries.filter(c => 
+    c.name.toLowerCase().includes(searchText.value.toLowerCase())
+  )
+})
+</script>
